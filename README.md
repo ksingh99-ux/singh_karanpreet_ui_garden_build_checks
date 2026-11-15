@@ -1,172 +1,110 @@
-# Coding Assignment 12: Web Component Library
+# UI Garden Build Checks - Assignment 13
 
-A small component library made with React, TypeScript, styled-components and Storybook. The final site runs in a docker container on localhost:8083 (127.0.0.1:8083).
+By Karanpreet Singh
 
-## What I need installed
+This is my UI component library from Assignment 12. For this assignment I added code quality checks so bad code can't get committed or pushed:
 
-- Node.js (version 20 or newer)
-- Docker Desktop (open and running)
+- **Prettier** checks that the code is formatted the same way everywhere
+- **ESLint** checks the code for mistakes
+- **Tests** make sure the components still work
+- **Husky** runs all three checks before every commit
+- **GitHub Actions** runs the same checks again on GitHub after every push
+- **Docker** builds the app and runs it at http://localhost:8018
+
+## What you need
+
+- Node.js and npm
 - Git
+- Docker Desktop (open and running)
 
-## Set up the project
+## How to run the app on localhost:8018
 
-Go into the project folder and install the packages
+1. Clone the repo and go into the folder:
 
-```
-cd singh_karanpreet_ui_garden
-npm install
-```
-
-## How I made it
-
-1. Made the react app with typescript and went into the folder
-
-```
-cd C:\projects
-npx create-react-app singh_karanpreet_ui_garden --template typescript
-cd singh_karanpreet_ui_garden
+```bash
+git clone https://github.com/ksingh99-ux/singh_karanpreet_ui_garden_build_checks.git
+cd singh_karanpreet_ui_garden_build_checks
 ```
 
-2. Installed styled-components and the testing packages
+2. Build the Docker image:
 
-```
-npm install styled-components
-npm install --save-dev @types/styled-components jest-styled-components
-```
-
-3. Added storybook. It asks 2 questions, I picked "No" for onboarding and "Minimal" for the configuration
-
-```
-npx storybook@latest init
+```bash
+docker build -t singh_karanpreet_coding_assignment13 .
 ```
 
-4. Deleted the example stories that storybook made
+3. Run the container:
 
-```
-rmdir /s /q src\stories
-```
-
-5. In tsconfig.json I added an exclude at the bottom so the build skips the story files
-
-```
-"include": [
-  "src"
-],
-"exclude": [
-  "src/**/*.stories.tsx"
-]
+```bash
+docker run -d --name singh_karanpreet_coding_assignment13 -p 8018:8018 singh_karanpreet_coding_assignment13
 ```
 
-6. Made the 13 components inside src/components, one folder for each
+4. Open http://localhost:8018 (or http://127.0.0.1:8018) in your browser.
 
-7. Deleted the default test, because I changed App
+To stop it:
 
-```
-del src\App.test.tsx
-```
-
-8. In package.json I changed the test script so it finds my .tests.tsx files
-
-```
-"test": "react-scripts test --watchAll=false --testMatch \"**/*.tests.tsx\""
+```bash
+docker stop singh_karanpreet_coding_assignment13
+docker rm singh_karanpreet_coding_assignment13
 ```
 
-9. Changed src/App.tsx so it shows every component, normal and disabled. This is the page the docker container shows
+### About the Dockerfile
 
-10. Made the Dockerfile and the .dockerignore file in the main project folder
+- Container name: `singh_karanpreet_coding_assignment13`
+- Working folder inside the container: `/singh_karanpreet_ui_garden_build_checks`
+- It installs the packages, makes a production build with `npm run build`, and serves it on port 8018 using `serve`.
 
-## Run storybook
+## Husky pre-commit checks
 
-```
-npm run storybook
-```
+Every time I run `git commit`, Husky runs these three commands first (they are in `.husky/pre-commit`):
 
-Open localhost:6006. Click a component on the left, then click Default or Disabled. Use the Controls panel at the bottom to change the text, the background color and disabled. Press Ctrl + C in the terminal to stop it.
-
-## Run the tests
-
-```
+```sh
+npm run check-format
+npm run lint
 npm test
 ```
 
-14 test suites and 27 tests pass.
+If any of them fails, the commit is stopped. The code has to be fixed before it can be committed.
 
-## Check the production build
+You can try it yourself:
 
-```
-npm run build
-```
+- Mess up the formatting in any file, then commit. Prettier stops it.
+- Add an unused variable like `const unused = 5;` in `src/App.tsx`, then commit. ESLint stops it.
+- Break a test by changing the expected text in a `.tests.tsx` file, then commit. The tests stop it.
 
-It should say "Compiled successfully".
+Run `git restore .` to undo the changes after.
 
-## Run the site on localhost:8083
+## GitHub Actions
 
-Open Docker Desktop first, then in the project folder run
+The workflow is in `.github/workflows/ci.yml`. Every time code is pushed to GitHub, it:
 
-```
-docker build -t singh_karanpreet_coding_assignment12 .
-docker run -d -p 8083:8083 --name singh_karanpreet_coding_assignment12 singh_karanpreet_coding_assignment12
-```
+1. Installs the project
+2. Runs the Prettier check
+3. Runs ESLint
+4. Runs the tests
+5. Makes a production build
 
-What the commands do:
+If something fails, the run shows a red X in the Actions tab and GitHub sends an email saying the build failed. This matters because someone can skip Husky with `git commit --no-verify`, but GitHub will still catch the bad code.
 
-- the dot at the end of docker build means use the Dockerfile in this folder
-- -t gives the image a name
-- -d runs the container in the background
-- -p 8083:8083 connects port 8083 on my computer to port 8083 in the container
-- --name gives the container its name
+## Useful commands
 
-Then open localhost:8083 (or 127.0.0.1:8083) in the browser. The page shows all the components.
-
-Check that it is running
-
-```
-docker ps
-```
-
-Stop it
-
-```
-docker stop singh_karanpreet_coding_assignment12
+```bash
+npm install            # install everything (also sets up Husky)
+npm start              # run the app in dev mode
+npm run storybook      # open Storybook
+npm run format         # fix formatting
+npm run check-format   # check formatting
+npm run lint           # run ESLint
+npm test               # run the tests
+npm run build          # make a production build
 ```
 
-Start it again
+## What I did for this assignment
 
-```
-docker start singh_karanpreet_coding_assignment12
-```
-
-Remove it and start fresh (after changing code)
-
-```
-docker stop singh_karanpreet_coding_assignment12
-docker rm singh_karanpreet_coding_assignment12
-docker build -t singh_karanpreet_coding_assignment12 .
-docker run -d -p 8083:8083 --name singh_karanpreet_coding_assignment12 singh_karanpreet_coding_assignment12
-```
-
-## Push to github
-
-First time (I made an empty repo on github first, then used its link)
-
-```
-git add .
-git commit -m "Coding Assignment 12"
-git branch -M main
-git remote add origin <repo url>
-git push -u origin main
-```
-
-After changing something
-
-```
-git add .
-git commit -m "describe the change"
-git push
-```
-
-## The 13 components
-
-Button, Label, Text, Table, TableHeader, TableRow, TableCell, TableFooter, Dropdown, RadioButton, Img, HeroImage and Card.
-
-Each component folder has 5 files, for example Button has Button.tsx, Button.stories.tsx, Button.types.tsx, Button.tests.tsx and index.ts.
+1. Copied my Assignment 12 project into a new folder and ran `npm install`.
+2. Installed Prettier, ESLint, eslint-config-prettier and Husky.
+3. Added `format`, `check-format` and `lint` scripts to `package.json`.
+4. Made a `.prettierrc` file for the Prettier rules and a `.prettierignore` file.
+5. Formatted the whole project and fixed the ESLint warnings in the Storybook files.
+6. Set up Husky so the pre-commit hook runs Prettier, ESLint and the tests.
+7. Added the GitHub Actions workflow and pushed to GitHub. The first run failed because GitHub used a different Node version, so I changed it to Node 24 and it passed.
+8. Updated the Dockerfile for the new folder name and port 8018, built it, and checked the app at http://localhost:8018.
