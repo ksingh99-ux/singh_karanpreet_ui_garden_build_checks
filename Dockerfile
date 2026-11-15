@@ -1,13 +1,13 @@
-# Assignment 13 - production build of the UI component library
+# node image to build and serve the react app
 FROM node:24-alpine
 
-# working directory required by the assignment
+# workdir the assignment asks for
 WORKDIR /singh_karanpreet_ui_garden_build_checks
 
-# Husky git hooks are not needed inside the container (no .git folder here)
+# no git in the container so skip husky
 ENV HUSKY=0
 
-# install dependencies first (uses package-lock.json for exact versions)
+# copy package files first and install
 COPY package*.json ./
 RUN npm ci
 
@@ -15,7 +15,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# small static server to host the build folder
+# small server to host the build folder
 RUN npm install -g serve
 
 # site runs on port 8018
